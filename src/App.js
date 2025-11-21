@@ -1,11 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
+import Login from './Login';
+import Signup from './Signup';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [showSignup, setShowSignup] = useState(false);
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
   const [editId, setEditId] = useState(null);
   const [editText, setEditText] = useState('');
+
+  // Load user and todos from localStorage on app start
+  useEffect(() => {
+    const savedUser = localStorage.getItem('todoUser');
+    if (savedUser) {
+      setUser(savedUser);
+      const userTodos = JSON.parse(localStorage.getItem(`todos_${savedUser}`) || '[]');
+      setTodos(userTodos);
+    }
+  }, []);
+
+  // Save todos to localStorage whenever todos change
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(`todos_${user}`, JSON.stringify(todos));
+    }
+  }, [todos, user]);
 
   const addTodo = () => {
     if (input.trim()) {
@@ -42,9 +63,54 @@ function App() {
     setEditText('');
   };
 
+  const handleLogin = (email, password) => {
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (users[email] && users[email] === password) {
+      setUser(email);
+      localStorage.setItem('todoUser', email);
+      const userTodos = JSON.parse(localStorage.getItem(`todos_${email}`) || '[]');
+      setTodos(userTodos);
+      return true;
+    }
+    return false;
+  };
+
+  const handleSignup = (email, password) => {
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (users[email]) {
+      return false; // User already exists
+    }
+    users[email] = password;
+    localStorage.setItem('users', JSON.stringify(users));
+    setUser(email);
+    localStorage.setItem('todoUser', email);
+    setTodos([]);
+    return true;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('todoUser');
+    setUser(null);
+    setTodos([]);
+  };
+
+  if (!user) {
+    return showSignup ? (
+      <Signup onSignup={handleSignup} onSwitchToLogin={() => setShowSignup(false)} />
+    ) : (
+      <Login onLogin={handleLogin} onSwitchToSignup={() => setShowSignup(true)} />
+    );
+  }
+
   return (
     <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
-      <h1>To-Do List</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>To-Do List</h1>
+        <div>
+          <span style={{ marginRight: '10px' }}>Welcome, {user}</span>
+          <button onClick={handleLogout} style={{ padding: '5px 10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Logout</button>
+        </div>
+      </div>
       
       <div style={{ marginBottom: '20px' }}>
         <input
