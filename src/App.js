@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import Login from './Login';
 import Signup from './Signup';
+import Dashboard from './Dashboard';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -111,6 +112,8 @@ function App() {
           <button onClick={handleLogout} style={{ padding: '5px 10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Logout</button>
         </div>
       </div>
+      
+      <Dashboard todos={todos} />
       
       <div style={{ marginBottom: '20px' }}>
         <input
